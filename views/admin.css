@@ -1,0 +1,19 @@
+body {
+    background-color: #444;
+}
+
+.admin {
+    text-align: center;
+}
+
+.row {
+    width: 100%;
+    display: inline-block;
+}
+.row input, .actions button {
+    margin: 1em;
+}
+
+.actions {
+    display: inline-block;
+}

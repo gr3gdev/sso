@@ -1,0 +1,48 @@
+body {
+    background-color: #444;
+}
+
+.sso {
+    text-align: center;
+}
+
+.sso form {
+    background-color: #FFF;
+    opacity: 0.8;
+    box-shadow: 2px 2px 10px #111;
+    max-width: 450px;
+    margin: auto;
+    border: 1px solid #EEE;
+    border-radius: 0.3rem;
+    display: inline-block;
+    vertical-align: middle;
+}
+.sso form .field {
+    padding: 1em;
+    display: flex;
+}
+.sso form input, .sso form button {
+    border-radius: 0.3rem;
+    border: none;
+    padding: 1em;
+}
+.sso form input {
+    border: 1px solid #EEE;
+}
+.sso form button {
+    background-color: #0BA;
+    color: #FFF;
+    font-weight: 700;
+    width: 100%;
+}
+.sso form button:hover {
+    background-color: #0A9;
+}
+
+.sso .error {
+    color: #F00;
+    margin: 1em;
+    font-weight: 700;
+    font-size: 10pt;
+    font-family: Sans;
+}
