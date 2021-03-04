@@ -1,6 +1,7 @@
 FROM node:current-alpine AS NODE_BUILDER
 WORKDIR /app
 COPY ./src/front /app
+RUN npm install
 RUN npm run build
 
 FROM openjdk:11-jdk-slim AS GRADLE_BUILDER
@@ -13,7 +14,10 @@ RUN echo "\nsystemProp.GITHUB_USERNAME=${GITHUB_USERNAME}\nsystemProp.GITHUB_TOK
 RUN ./gradlew installDist
 
 FROM openjdk:11-jre-slim
+ENV POSTGRES_URL "jdbc:postgresql://localhost:5432/mysso"
+ENV POSTGRES_USERNAME "mysso_user"
+ENV POSTGRES_PASSWORD "mysso_password"
 WORKDIR /app
-COPY --from=GRADLE_BUILDER /app/build/install/sso /app/admin
+COPY --from=GRADLE_BUILDER /app/build/install/sso /app
 
 ENTRYPOINT ["bash", "./bin/sso"]

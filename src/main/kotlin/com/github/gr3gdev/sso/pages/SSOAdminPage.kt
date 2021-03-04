@@ -1,18 +1,20 @@
 package com.github.gr3gdev.sso.pages
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.gr3gdev.jserver.http.Request
 import com.github.gr3gdev.jserver.route.HttpStatus
 import com.github.gr3gdev.jserver.route.Response
 import com.github.gr3gdev.jserver.route.RouteListener
 import com.github.gr3gdev.jserver.security.TokenManager
-import com.github.gr3gdev.sso.bean.ApiResponse
+import com.github.gr3gdev.sso.bean.http.ApiResponse
 import com.github.gr3gdev.sso.service.AdminService
 import com.github.gr3gdev.sso.service.ClientService
 import com.github.gr3gdev.sso.service.UserService
 
-class SSOAdminPage(private val jsonMapper: ObjectMapper, tokenManager: TokenManager) {
+object SSOAdminPage {
 
+    private val jsonMapper = jacksonObjectMapper()
+    private val tokenManager = TokenManager.issuer("GR3Gdev_MySSO").generateSecretKey(256)
     private val adminService = AdminService(jsonMapper, tokenManager)
 
     fun getClients(): RouteListener {

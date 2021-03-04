@@ -1,20 +1,31 @@
 package com.github.gr3gdev.sso.service
 
 import com.github.gr3gdev.jserver.security.password.BCryptPasswordManager
-import com.github.gr3gdev.sso.bean.User
-import com.github.gr3gdev.sso.db.UserDAO
+import com.github.gr3gdev.sso.bean.SsoUser
+import com.github.gr3gdev.sso.bean.SsoUserClients
+import com.github.gr3gdev.sso.jdbc.JDBCFactory
 import java.util.*
 
 object UserService {
 
-    private val userDAO = UserDAO()
+    private val userDAO = JDBCFactory.getUserDAO()
+    private val userClientsDAO = JDBCFactory.getUserClientsDAO()
     private val passwordManager = BCryptPasswordManager(10)
 
-    fun findAll() = userDAO.find()
+    fun findAll() = userDAO.select()
 
-    fun <T> find(username: String?, password: String?, ifPresent: (user: User) -> T, orElse: () -> T): T {
+    fun findByName(username: String, ifPresent: (user: SsoUser) -> Unit, orElse: () -> Unit) {
+        val user = userDAO.findByName(username)
+        if (user.id > 0) {
+            ifPresent(user)
+        } else {
+            orElse()
+        }
+    }
+
+    fun <T> find(username: String?, password: String?, ifPresent: (user: SsoUser) -> T, orElse: () -> T): T {
         var res: T? = null
-        Optional.ofNullable(userDAO.find()
+        Optional.ofNullable(userDAO.select()
             .firstOrNull {
                 it.username == username && passwordManager.matches(password ?: "", it.password)
             }).ifPresentOrElse({
@@ -25,24 +36,23 @@ object UserService {
         return res!!
     }
 
-    fun save(user: User): User {
+    fun save(user: SsoUser): SsoUser {
         user.password = passwordManager.encode(user.password)
-        user.id = userDAO.save(user)
+        userDAO.add(user)
         user.clients.forEach { roleByClient ->
             ClientService.findAll().filter { client -> client.clientName == roleByClient.key }.forEach {
-                userDAO.saveClient(user, it, roleByClient.value)
+                val userClients = SsoUserClients()
+                userClients.userId = user.id
+                userClients.clientId = it.id
+                userClients.role = roleByClient.value.name
+                userClientsDAO.add(userClients)
             }
         }
         return user
     }
 
-    fun createTables() {
-        userDAO.createTable(User.TABLE_NAME, User.COLUMNS)
-        userDAO.createTable(User.TABLE_NAME_LINK_CLIENT, User.COLUMNS_LINK_CLIENT)
-    }
-
-    fun delete(user: User) {
-        userDAO.delete(user)
+    fun delete(user: SsoUser) {
+        userDAO.delete(user.id)
     }
 
 }

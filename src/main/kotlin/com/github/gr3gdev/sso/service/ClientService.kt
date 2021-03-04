@@ -1,26 +1,26 @@
 package com.github.gr3gdev.sso.service
 
 import com.github.gr3gdev.jserver.security.password.BCryptPasswordManager
-import com.github.gr3gdev.sso.bean.Client
-import com.github.gr3gdev.sso.db.ClientDAO
+import com.github.gr3gdev.sso.bean.SsoClient
+import com.github.gr3gdev.sso.jdbc.JDBCFactory
 import java.util.*
 
 object ClientService {
 
-    private val clientDAO = ClientDAO()
+    private val clientDAO = JDBCFactory.getClientDAO()
     private val passwordManager = BCryptPasswordManager(10)
 
-    fun findAll() = clientDAO.find()
+    fun findAll() = clientDAO.select()
 
     fun <T> find(
         clientName: String?,
         clientSecret: String?,
         addressIP: String?,
-        ifPresent: (client: Client) -> T,
+        ifPresent: (client: SsoClient) -> T,
         orElse: () -> T
     ): T {
         var res: T? = null
-        Optional.ofNullable(clientDAO.find()
+        Optional.ofNullable(clientDAO.select()
             .firstOrNull {
                 it.clientName == clientName
                         && it.addressIP == addressIP
@@ -33,17 +33,17 @@ object ClientService {
         return res!!
     }
 
-    fun save(client: Client): Client {
-        client.id = clientDAO.save(client)
+    fun save(client: SsoClient): SsoClient {
+        if (client.id > 0) {
+            clientDAO.update(client)
+        } else {
+            clientDAO.add(client)
+        }
         return client
     }
 
-    fun createTables() {
-        clientDAO.createTable(Client.TABLE_NAME, Client.COLUMNS)
-    }
-
-    fun delete(client: Client) {
-        clientDAO.delete(client)
+    fun delete(client: SsoClient) {
+        clientDAO.delete(client.id)
     }
 
 }

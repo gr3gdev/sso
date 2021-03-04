@@ -7,12 +7,15 @@ import com.github.gr3gdev.jserver.logger.Logger
 import com.github.gr3gdev.jserver.route.HttpStatus
 import com.github.gr3gdev.jserver.security.TokenManager
 import com.github.gr3gdev.sso.bean.*
+import com.github.gr3gdev.sso.bean.http.ApiResponse
+import com.github.gr3gdev.sso.bean.http.AuthRequest
+import com.github.gr3gdev.sso.bean.http.AuthResponse
 import com.github.gr3gdev.sso.pages.PageCst
 
 class AdminService(private val jsonMapper: ObjectMapper, private val tokenManager: TokenManager) {
 
     fun saveClient(json: String, apiResponse: ApiResponse) {
-        val client = jsonMapper.readValue<Client>(json)
+        val client = jsonMapper.readValue<SsoClient>(json)
         val updated = client.id > 0
         val clientSaved = ClientService.save(client)
         if (clientSaved.id > 0) {
@@ -34,7 +37,7 @@ class AdminService(private val jsonMapper: ObjectMapper, private val tokenManage
     }
 
     fun saveUser(json: String, apiResponse: ApiResponse) {
-        val user = jsonMapper.readValue<User>(json)
+        val user = jsonMapper.readValue<SsoUser>(json)
         val updated = user.id > 0
         val userSaved = UserService.save(user)
         if (userSaved.id > 0) {
@@ -63,8 +66,8 @@ class AdminService(private val jsonMapper: ObjectMapper, private val tokenManage
     ): T {
         return tokenManager.getTokenFromHeader(req, { token ->
             Logger.debug("checkUserAccess $token")
-            tokenManager.getUserData(token, User::class.java, {
-                if (it.role == Role.ADMIN) {
+            tokenManager.getUserData(token, SsoUser::class.java, {
+                if (it.role == Role.ADMIN.name) {
                     action()
                 } else {
                     Logger.warn("Access forbidden : ${it.username}")

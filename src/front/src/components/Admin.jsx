@@ -11,6 +11,7 @@ export default class Admin extends React.Component {
         users: [],
         username: '',
         password: '',
+        userClients: '',
         clientEdited: null,
         userEdited: null
     }
@@ -38,25 +39,42 @@ export default class Admin extends React.Component {
         this.setState({ clientEdited: null })
     }
     handleAddUser = () => {
-        const { username, password } = this.state
+        const { username, password, userClients } = this.state
+        const clients = {}
+        userClients.split(',').forEach(c => clients[c] = "USER")
         httpClient.saveUser({
             username: username,
-            password: password
+            password: password,
+            clients: clients
         }).then(res => console.log(res))
     }
     handleEditUser = (user) => {
-        this.setState({ userEdited: user })
+        const edited = user
+        edited.userClients = Object.keys(user.clients).join(',')
+        this.setState({ userEdited: edited })
     }
     handleDeleteUser = (user) => {
         console.log('TODO delete user')
     }
     handleSaveUser = () => {
         const { userEdited } = this.state
-        httpClient.saveUser(userEdited).then(res => console.log(res))
+        const clients = {}
+        userEdited.userClients.split(',').forEach(c => clients[c] = "USER")
+        httpClient.saveUser({
+            username: userEdited.username,
+            password: userEdited.password,
+            clients: clients
+        }).then(res => console.log(res))
         this.setState({ userEdited: null })
     }
+    handleChangeClientName = (e) => this.setState({ clientName: e.target.value })
+    handleChangeClientSecret = (e) => this.setState({ clientSecret: e.target.value })
+    handleChangeClientIP = (e) => this.setState({ addressIP: e.target.value })
+    handleChangeUserName = (e) => this.setState({ username: e.target.value })
+    handleChangeUserPassword = (e) => this.setState({ password: e.target.value })
+    handleChangeUserClient = (e) => this.setState({ userClients: e.target.value })
 	render() {
-        const { clients, clientName, clientSecret, addressIP, users, username, password, clientEdited, userEdited } = this.state
+        const { clients, clientName, clientSecret, addressIP, users, username, password, userClients, clientEdited, userEdited } = this.state
         const panes = [
             {
                 menuItem: 'Clients',
@@ -71,15 +89,15 @@ export default class Admin extends React.Component {
                             </Table.Header>
                             <Table.Body>
                                 <Table.Row>
-                                    <Table.Cell><Input type='text' value={clientName} placeholder='Client name' /></Table.Cell>
-                                    <Table.Cell><Input type='password' value={clientSecret} placeholder='Client secret' /></Table.Cell>
-                                    <Table.Cell><Input type='text' value={addressIP} placeholder='0.0.0.0' /></Table.Cell>
+                                    <Table.Cell><Input type='text' value={clientName} onChange={this.handleChangeClientName} placeholder='Client name' /></Table.Cell>
+                                    <Table.Cell><Input type='password' value={clientSecret} onChange={this.handleChangeClientSecret} placeholder='Client secret' /></Table.Cell>
+                                    <Table.Cell><Input type='text' value={addressIP} onChange={this.handleChangeClientIP} placeholder='0.0.0.0' /></Table.Cell>
                                     <Table.Cell>
                                         <Button icon='add' onClick={this.handleAddClient} />
                                     </Table.Cell>
                                 </Table.Row>
                                 {clients.map((client, index) => {
-                                    if (clientEdited) {
+                                    if (clientEdited.id === client.id) {
                                         return (
                                             <Table.Row key={index}>
                                                 <Table.Cell><Input type='text' value={clientEdited.clientName} placeholder='Client name' /></Table.Cell>
@@ -122,20 +140,20 @@ export default class Admin extends React.Component {
                             </Table.Header>
                             <Table.Body>
                                 <Table.Row>
-                                    <Table.Cell><Input type='text' value={username} placeholder='User name' /></Table.Cell>
-                                    <Table.Cell><Input type='password' value={password} placeholder='User password' /></Table.Cell>
-                                    <Table.Cell>TODO Clients</Table.Cell>
+                                    <Table.Cell><Input type='text' value={username} onChange={this.handleChangeUserName} placeholder='User name' /></Table.Cell>
+                                    <Table.Cell><Input type='password' value={password} onChange={this.handleChangeUserPassword} placeholder='User password' /></Table.Cell>
+                                    <Table.Cell><Input type='text' value={userClients} onChange={this.handleChangeUserClient} placeholder='Clients name' /></Table.Cell>
                                     <Table.Cell>
                                         <Button icon='add' onClick={this.handleAddUser} />
                                     </Table.Cell>
                                 </Table.Row>
                                 {users.map((user, index) => {
-                                    if (userEdited) {
+                                    if (userEdited.id === user.id) {
                                         return (
                                             <Table.Row key={index}>
                                                 <Table.Cell><Input type='text' value={userEdited.username} placeholder='User name' /></Table.Cell>
                                                 <Table.Cell><Input type='password' value={userEdited.password} placeholder='User password' /></Table.Cell>
-                                                <Table.Cell>TODO Clients</Table.Cell>
+                                                <Table.Cell><Input type='text' value={userEdited.userClients} placeholder='Clients name' /></Table.Cell>
                                                 <Table.Cell>
                                                     <Button icon='save' onClick={this.handleSaveUser} />
                                                 </Table.Cell>
@@ -146,7 +164,7 @@ export default class Admin extends React.Component {
                                             <Table.Row key={index}>
                                                 <Table.Cell>{user.username}</Table.Cell>
                                                 <Table.Cell>********</Table.Cell>
-                                                <Table.Cell>TODO Clients</Table.Cell>
+                                                <Table.Cell>{Object.keys(user.clients).join(',')}</Table.Cell>
                                                 <Table.Cell>
                                                     <Button icon='edit' onClick={() => this.handleEditUser(user)} />
                                                     <Button icon='delete' onClick={() => this.handleDeleteUser(user)} />

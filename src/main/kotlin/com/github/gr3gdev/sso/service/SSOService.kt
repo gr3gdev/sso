@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.gr3gdev.jserver.http.Request
 import com.github.gr3gdev.jserver.security.TokenManager
-import com.github.gr3gdev.sso.bean.AuthRequest
-import com.github.gr3gdev.sso.bean.Client
-import com.github.gr3gdev.sso.bean.ClientRequest
-import com.github.gr3gdev.sso.bean.User
+import com.github.gr3gdev.sso.bean.http.AuthRequest
+import com.github.gr3gdev.sso.bean.SsoClient
+import com.github.gr3gdev.sso.bean.http.ClientRequest
+import com.github.gr3gdev.sso.bean.SsoUser
 import com.github.gr3gdev.sso.pages.PageCst
 
 class SSOService(private val jsonMapper: ObjectMapper, private val tokenManager: TokenManager) {
@@ -22,12 +22,12 @@ class SSOService(private val jsonMapper: ObjectMapper, private val tokenManager:
 
     fun <T> checkUserTokenFromHeader(
         req: Request,
-        userFound: (url: String) -> T,
+        userFound: (user: SsoUser, url: String) -> T,
         orElse: () -> T
     ): T {
         return tokenManager.getTokenFromHeader(req, { token ->
-            tokenManager.getUserData(token, User::class.java, {
-                userFound(getRedirectURL(req))
+            tokenManager.getUserData(token, SsoUser::class.java, {
+                userFound(it, getRedirectURL(req))
             }, {
                 orElse()
             })
@@ -38,12 +38,12 @@ class SSOService(private val jsonMapper: ObjectMapper, private val tokenManager:
 
     fun <T> checkUserTokenFromCookie(
         req: Request,
-        userFound: (url: String) -> T,
+        userFound: (user: SsoUser, url: String) -> T,
         orElse: () -> T
     ): T {
         return tokenManager.getTokenFromCookie(req, PageCst.COOKIE_USER, { token ->
-            tokenManager.getUserData(token, User::class.java, {
-                userFound(getRedirectURL(req))
+            tokenManager.getUserData(token, SsoUser::class.java, {
+                userFound(it, getRedirectURL(req))
             }, {
                 orElse()
             })
@@ -54,7 +54,7 @@ class SSOService(private val jsonMapper: ObjectMapper, private val tokenManager:
 
     fun <T> checkUserAuthentication(
         req: Request,
-        userFound: (user: User, url: String) -> T,
+        userFound: (user: SsoUser, url: String) -> T,
         orElse: () -> T
     ): T {
         return req.params("body", { json ->
@@ -71,7 +71,7 @@ class SSOService(private val jsonMapper: ObjectMapper, private val tokenManager:
 
     fun <T> checkClientAuthentication(
         req: Request,
-        clientFound: (client: Client) -> T,
+        clientFound: (client: SsoClient) -> T,
         orElse: () -> T
     ): T {
         return req.params("body", { json ->

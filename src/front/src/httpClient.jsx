@@ -4,28 +4,40 @@ const httpClient = axios.create()
 
 httpClient.isConnected = function() {
     const token = localStorage.getItem('MySSO_token')
-    httpClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    if (token) {
+        httpClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
     return httpClient.logIn()
 }
 
 httpClient.logIn = function(credentials) {
 	return this({ method: 'post', url: `/login`, data: credentials })
 		.then((serverResponse) => {
-		    const token = serverResponse.data.token
-			if (token) {
-			    localStorage.setItem('MySSO_token', token)
-			    httpClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-				return {
-                    success: true,
+            const token = serverResponse.data.token
+            if (token) {
+                if (serverResponse.data.mustUpdated === true) {
+                    return {
+                        success: false,
+                        update: serverResponse.data.id,
+                        error: null
+                    }
+                } else {
+                    localStorage.setItem('MySSO_token', token)
+                    httpClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
+                    return {
+                        success: true,
+                        update: null,
+                        error: null
+                    }
+                }
+            } else {
+                localStorage.removeItem('MySSO_token')
+                return {
+                    success: false,
+                    update: null,
                     error: null
                 }
-			} else {
-                localStorage.removeItem('MySSO_token')
-				return {
-                    success: false,
-				    error: 'Authentification failed'
-				}
-			}
+            }
 		})
 		.catch((err) => {
             localStorage.removeItem('MySSO_token')

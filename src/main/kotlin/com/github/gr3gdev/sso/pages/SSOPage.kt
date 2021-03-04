@@ -1,17 +1,21 @@
 package com.github.gr3gdev.sso.pages
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.github.gr3gdev.jserver.logger.Logger
 import com.github.gr3gdev.jserver.route.HttpStatus
 import com.github.gr3gdev.jserver.route.Response
 import com.github.gr3gdev.jserver.route.RouteListener
 import com.github.gr3gdev.jserver.security.TokenManager
-import com.github.gr3gdev.sso.bean.AuthResponse
-import com.github.gr3gdev.sso.bean.ClientResponse
+import com.github.gr3gdev.sso.bean.http.AuthResponse
+import com.github.gr3gdev.sso.bean.http.ClientResponse
 import com.github.gr3gdev.sso.bean.Role
+import com.github.gr3gdev.sso.bean.SsoUser
 import com.github.gr3gdev.sso.service.SSOService
 
-open class SSOPage(private val jsonMapper: ObjectMapper, private val tokenManager: TokenManager) {
+object SSOPage {
 
+    private val jsonMapper = jacksonObjectMapper()
+    private val tokenManager = TokenManager.issuer("GR3Gdev_MySSO").generateSecretKey(256)
     private val ssoService = SSOService(jsonMapper, tokenManager)
 
     private val mimeTypes = mapOf(
@@ -45,33 +49,43 @@ open class SSOPage(private val jsonMapper: ObjectMapper, private val tokenManage
 
     fun login(): RouteListener {
         return RouteListener().process { req ->
-            val authResponse = AuthResponse()
-            ssoService.checkUserTokenFromHeader(req, { redirectUrl ->
-                Response(HttpStatus.OK).redirect(redirectUrl)
+            ssoService.checkUserTokenFromHeader(req, { user, redirectUrl ->
+                Logger.info("login() token dans header")
+                responseUser(user, redirectUrl)
             }, {
-                ssoService.checkUserTokenFromCookie(req, { redirectUrl ->
-                    Response(HttpStatus.OK).redirect(redirectUrl)
+                ssoService.checkUserTokenFromCookie(req, { user, redirectUrl ->
+                    Logger.info("login() token dans cookie")
+                    responseUser(user, redirectUrl)
                 }, {
+                    Logger.info("login() utilisateur non connecté")
                     ssoService.checkUserAuthentication(req, { user, redirectUrl ->
-                        // Validité du token : 1h
-                        authResponse.token = tokenManager.createToken(user, PageCst.ONE_HOUR)
-                        authResponse.id = user.id
-                        if (user.role == Role.ADMIN) {
-                            Response(
-                                HttpStatus.OK, "application/json",
-                                jsonMapper.writeValueAsBytes(authResponse)
-                            )
-                                .cookie(PageCst.COOKIE_USER, authResponse.token)
-                        } else {
-                            Response(HttpStatus.OK)
-                                .redirect(redirectUrl)
-                                .cookie(PageCst.COOKIE_USER, authResponse.token)
-                        }
+                        responseUser(user, redirectUrl)
                     }, {
                         Response(HttpStatus.UNAUTHORIZED)
                     })
                 })
             })
+        }
+    }
+
+    private fun responseUser(
+        user: SsoUser,
+        redirectUrl: String
+    ): Response {
+        val authResponse = AuthResponse()
+        // Validité du token : 1h
+        authResponse.token = tokenManager.createToken(user, PageCst.ONE_HOUR)
+        authResponse.id = user.id
+        authResponse.mustUpdated = user.temporaryPassword
+        return if (user.role == Role.ADMIN.name) {
+            Response(
+                HttpStatus.OK, "application/json",
+                jsonMapper.writeValueAsBytes(authResponse)
+            )
+        } else {
+            Response(HttpStatus.OK)
+                .redirect(redirectUrl)
+                .cookie(PageCst.COOKIE_USER, authResponse.token)
         }
     }
 
