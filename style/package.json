@@ -1,0 +1,17 @@
+{
+  "name": "style",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {
+    "gulp": "^4.0.2"
+  },
+  "scripts": {
+    "copy": "cp semantic/dist/semantic.min.css ../sso-server/src/main/resources/css/. && cp -r semantic/dist/themes ../sso-server/src/main/resources/css/themes"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "fomantic-ui": "^2.8.7"
+  }
+}

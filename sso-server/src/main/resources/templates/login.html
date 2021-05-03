@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>MySSO</title>
+    <link rel="stylesheet" type="text/css" href="/css/semantic.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/sso.css"/>
+</head>
+<body>
+<div class="ui middle aligned center aligned grid">
+    <div class="column">
+        <!--<div class="ui message"></div>-->
+        <form class="ui large form" method="post" th:action="${action}">
+            <div class="ui stacked segment">
+                <div class="field">
+                    <div class="ui left icon input">
+                        <i class="user icon"></i>
+                        <input type="text" name="username" placeholder="Username" autofocus autocomplete="off">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="ui left icon input">
+                        <i class="lock icon"></i>
+                        <input type="password" name="password" placeholder="Password">
+                    </div>
+                </div>
+                <button class="ui fluid large teal submit button" type="submit">Login</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

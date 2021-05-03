@@ -2,3 +2,5 @@
 .gradle/
 build/
 *.iml
+/style/node_modules/
+/style/semantic/
